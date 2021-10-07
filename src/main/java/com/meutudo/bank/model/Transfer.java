@@ -28,13 +28,20 @@ public class Transfer implements Serializable {
 	
 	@ManyToOne
 	@JoinColumn(name="ORIGIN_ACCOUNT_FK")
-	private Account Origin;
+	private Account origin;
 	
 	@ManyToOne
 	@JoinColumn(name="DESTINATION_ACCOUNT_FK")
-	private Account Destination;
+	private Account destination;
 	
 	private LocalDateTime date;
 	
 	private double value;
+
+	public Transfer(Account origin, Account destination, LocalDateTime date, double value) {
+		this.origin = origin;
+		this.destination = destination;
+		this.date = date;
+		this.value = value;
+	}
 }

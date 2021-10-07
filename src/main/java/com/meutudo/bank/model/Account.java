@@ -42,4 +42,10 @@ public class Account implements Serializable {
 	@Convert(converter = TypeAccountEnum.Converter.class)
 	private TypeAccountEnum typeAccountEnum;
 
+	public Account(String agency, String number, String digit, double balance) {
+		this.agency = agency;
+		this.number = number;
+		this.digit = digit;
+		this.balance = balance;
+	}
 }
