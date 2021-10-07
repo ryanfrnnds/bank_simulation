@@ -1,25 +1,11 @@
 package com.meutudo.bank.model;
 
-import java.io.Serializable;
-
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-
 import com.fasterxml.jackson.databind.jsonschema.JsonSerializableSchema;
 import com.meutudo.bank.enums.TypeAccountEnum;
+import lombok.*;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import javax.persistence.*;
+import java.io.Serializable;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,7 +14,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@Table(name = "ACCOUNT", schema = "SIMULACAO")
+@Table(name = "ACCOUNT", schema = "SIMULATION")
 public class Account implements Serializable {
 
 	/**
@@ -46,13 +32,13 @@ public class Account implements Serializable {
 	private String digitAgency;
 	private String number;
 	private String digit;
-	private double value;
+	private double balance;
 	
 	@ManyToOne
 	@JoinColumn(name="BANK_FK")
 	private Bank bank;
 	
-	@Column(name = "TIPO_CONTA")
+	@Column(name = "ACCOUNT_TYPE")
 	@Convert(converter = TypeAccountEnum.Converter.class)
 	private TypeAccountEnum typeAccountEnum;
 
