@@ -1,8 +1,8 @@
 # meutudo-avaliacao
-
-1 - Projeto criado com o SpringInitialize (https://start.spring.io/)
-	1.2 Dependencias
-		1.2.1 Spring Boot DevTools para LiveReload
-		1.2.2 Lombok para codificações mais CLEANS
-		1.2.3 FlyWay para migrations. Versionamento do "banco"
-		1.2.4 H2Database para desacoplar a necessidade de um banco local
+- [Projeto criado com o SpringInitialize](#https://start.spring.io/)
+  - Dependencias utilizadas
+    - _Spring Boot DevTools_ para LiveReload
+    - _Lombok_ para codificações mais CLEANS
+    - _FlyWay_ para migrations. Versionamento do "banco"
+    - _H2Database_ para desacoplar a necessidade de um banco local
+    - _junit_ para implementações de TESTES
