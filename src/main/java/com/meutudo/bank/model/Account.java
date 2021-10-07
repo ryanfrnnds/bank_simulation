@@ -46,6 +46,7 @@ public class Account implements Serializable {
 	private String digitAgency;
 	private String number;
 	private String digit;
+	private double value;
 	
 	@ManyToOne
 	@JoinColumn(name="BANK_FK")
