@@ -37,6 +37,7 @@ public class Transfer implements Serializable {
 	private Account destination;
 	
 	private LocalDateTime date;
+
 	
 	private Double value;
 
