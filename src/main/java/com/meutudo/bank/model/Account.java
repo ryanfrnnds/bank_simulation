@@ -29,7 +29,6 @@ public class Account implements Serializable {
 	private Long id;
 	
 	private String agency;
-	private String digitAgency;
 	private String number;
 	private String digit;
 	private double balance;
