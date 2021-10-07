@@ -1,24 +1,21 @@
 package com.meutudo.bank;
 
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
-public class AccountServiceTest {
-
+public class TransferServiceTest {
+/*
     @TestConfiguration
-    static class AccountServiceTestConfiguration() {
+    static class TransferServiceTestConfiguration() {
 
         @Bean
-        public AccountService accountService() {
-            return new AccountService();
+        public TransferService transferService() {
+            return new TransferService();
         }
     }
 
     @Autowired
-    AccountService accountService;
-
+    TransferService transferService;
+*/
 }
