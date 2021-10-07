@@ -14,17 +14,13 @@ public class AccountService {
 	@Autowired
 	AccountRepository accountRepository;
 	
-	public Double getBalance(Long id) {
-		return accountRepository.findById(id).map(account -> account.getBalance()).get();
-	}
-	
 	public Optional<Double> getBalance(String agency, String number, String digit) {
 		Optional<Account> optAccount = accountRepository.findByAgencyAndNumberAndDigit(agency,number,digit);
 		return optAccount.isPresent() ? optAccount.map(account -> account.getBalance()) : Optional.empty();
 	}
 	
-	public Account get(Long id) {
-		return accountRepository.findById(id).get();
+	public boolean checkFound(String agency, String number, String digit) {
+		Optional<Account> optAccount = accountRepository.findByAgencyAndNumberAndDigit(agency,number,digit);
+		return optAccount.isPresent();
 	}
-
 }

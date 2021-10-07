@@ -1,5 +1,7 @@
 package com.meutudo.bank.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.meutudo.bank.enums.TransferResultEnum;
 import lombok.*;
 
 import javax.persistence.*;
@@ -36,7 +38,11 @@ public class Transfer implements Serializable {
 	
 	private LocalDateTime date;
 	
-	private double value;
+	private Double value;
+
+	@Transient
+	@JsonIgnore
+	TransferResultEnum result;
 
 	public Transfer(Account origin, Account destination, LocalDateTime date, double value) {
 		this.origin = origin;
