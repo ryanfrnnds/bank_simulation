@@ -290,7 +290,6 @@ public class TransferServiceTest {
         dto.setOrigin(new AccountDto(transfer.getOrigin().getAgency(),transfer.getOrigin().getNumber(),transfer.getOrigin().getDigit()));
         dto.setDestination(new AccountDto(transfer.getDestination().getAgency(),transfer.getDestination().getNumber(),transfer.getDestination().getDigit()));
         dto.setValue(transfer.getValue());
-        dto.setDate(transfer.getDate());
         dto.setRevert(transfer.isRevert());
         return dto;
     }

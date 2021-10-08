@@ -15,20 +15,18 @@ public class TransferDto {
 
 	private AccountDto origin;
 	private AccountDto destination;
-	private LocalDateTime date;
 	private Double value;
 	private boolean revert;
 
-	public TransferDto(Double value, Account origin , Account destination,LocalDateTime date, boolean isRevert) {
+	public TransferDto(Double value, Account origin , Account destination, boolean isRevert) {
 		this.origin = new AccountDto(origin);
 		this.destination = new AccountDto(destination);
 		revert = isRevert;
-		this.date = date;
 		this.value = value;
 	}
 
 	public Transfer convert(){
-		return new Transfer(origin.convert(), destination.convert(), date, value, revert);
+		return new Transfer(origin.convert(), destination.convert(), LocalDateTime.now(),value, revert);
 	}
 }
 
