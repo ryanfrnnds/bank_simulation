@@ -160,15 +160,14 @@ public class TransferServiceTest {
     // Deve Realizar Transferencia entre duas contas                  - OK
     //TODO - Reverter transferencias
     //--- CENÁRIOS ---
-    // Não deve Reverter uma transferência quando o saldo do destino não possuir crêdito - FALTANDO
-    // Reverter uma transferência - FALTANDO
+    // deve reverter uma transferência - FALTANDO
     //TODO - Programar uma transferência futura parcelada (Pensar em cenários)
     //--- OBSERVAÇÕES ---
         //Atentar-se as condições de divisões que podem gerar DIZMA PERIODICA! Nesse caso utilizar o truncate na dizma e acrescer 1 centavo na ultima parcela.
         // Deve gerar quantidade de transferencia igual a quantidade de parcelas
         // Irá ser considerada qualquer transferencia de DATA FUTURA como sendo uma transferencia futura.
     //--- CENÁRIOS ---
-
+    // deve programar uma transferência futura! - FALTANDO
 
     private Transfer build(Double value, LocalDateTime date) {
         Account origin = new Account("4421", "01520446", "9", 589.23);
