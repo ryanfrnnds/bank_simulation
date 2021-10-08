@@ -9,7 +9,6 @@ import com.meutudo.bank.model.Transfer;
 import com.meutudo.bank.repository.TransferRepository;
 import com.meutudo.bank.service.AccountService;
 import com.meutudo.bank.service.TransferService;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
@@ -45,12 +44,6 @@ public class TransferServiceTest {
 
     @MockBean
     TransferRepository transferRepository;
-
-    @Before
-    public void setUp(){
-
-        // Mockito.when(transferRepository.save(transfer)).thenReturn(transfer);
-    }
 
     @Test
     //nao Deve Realizar Transferencia Com Saldo Insuficiente
@@ -107,7 +100,7 @@ public class TransferServiceTest {
     }
 
     @Test
-    //nao Deve Realizar Transferencia Quando Destino Nao Encontrada
+    //nao Deve Realizar Transferencia Quando Destino Nao Encontrado
     public void ShouldNotAccomplishTransferWhenDestinationNotFound() {
         Transfer params = build(Double.valueOf(500), LocalDateTime.now());
 
@@ -147,6 +140,26 @@ public class TransferServiceTest {
         Assertions.assertEquals(resultado.getValue(), value);
         Assertions.assertEquals(resultado.getDate(), params.getDate());
     }
+
+    //TODO - Transferencia em Geral
+    //--- CENÁRIOS ---
+    // Não Deve Realizar Transferencia Com Saldo Insuficiente         - OK
+    // Nao Deve Realizar Transferencia Com Valor Zero Ou Menor        - OK
+    // Nao Deve Realizar Transferencia Quando Origem Nao Encontrada   - OK
+    // Nao Deve Realizar Transferencia Quando Origem Nao Encontrada   - OK
+    // Nao Deve Realizar Transferencia Quando Destino Nao Encontrado  - OK
+    // Deve Realizar Transferencia entre duas contas                  - OK
+    //TODO - Reverter transferencias
+    //--- CENÁRIOS ---
+    // Não deve Reverter uma transferência quando o saldo do destino não possuir crêdito - FALTANDO
+    // Deve Reverter uma transferência - FALTANDO
+    //TODO - Programar uma transferência futura parcelada (Pensar em cenários)
+    //--- OBSERVAÇÕES ---
+        //Atentar-se as condições de divisões que podem gerar DIZMA PERIODICA! Nesse caso utilizar o truncate na dizma e acrescer 1 centavo na ultima parcela.
+        // Deve gerar quantidade de transferencia igual a quantidade de parcelas
+        // Irá ser considerada qualquer transferencia de DATA FUTURA como sendo uma transferencia futura.
+    //--- CENÁRIOS ---
+
 
     private Transfer build(Double value, LocalDateTime date) {
         Account origin = new Account("4421", "01520446", "9", 589.23);
