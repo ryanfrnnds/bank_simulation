@@ -54,7 +54,7 @@ class BankApplicationTests {
 	private Transfer build(Double value, LocalDateTime date) {
 		Account origin = new Account("4421", "01520446", "9", 589.23);
 		Account destination = new Account("5817", "82516", "8", 1008.87);
-		return new Transfer(origin,destination, date,value);
+		return new Transfer(origin,destination, date,value, false);
 	}
 
 	private TransferDto convertDto(Transfer transfer) {

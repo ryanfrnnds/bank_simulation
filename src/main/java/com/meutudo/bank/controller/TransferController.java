@@ -7,12 +7,7 @@ import com.meutudo.bank.service.TransferService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import javax.transaction.SystemException;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/transfers")
@@ -26,5 +21,15 @@ public class TransferController {
         HttpStatus status = transfer.getResult().getCode().equals(TransferResultEnum.CREATED.getCode()) ? HttpStatus.CREATED : HttpStatus.UNPROCESSABLE_ENTITY;
 
         return new ResponseEntity<>(transfer.getResult().getMessage(transfer),  status);
+    }
+
+    @PostMapping("revert/{id}")
+    public ResponseEntity<?> revert(@PathVariable Long id) throws RuntimeException {
+        Transfer transferRevert = transferService.revert(id);
+        HttpStatus status = HttpStatus.OK;
+        if(!transferRevert.getResult().getCode().equals(TransferResultEnum.IS_REVERT.getCode()))
+            status = transferRevert.getResult().getCode().equals(TransferResultEnum.CREATED.getCode()) ? HttpStatus.CREATED : HttpStatus.UNPROCESSABLE_ENTITY;
+
+        return new ResponseEntity<>(transferRevert.getResult().getMessage(transferRevert),  status);
     }
 }

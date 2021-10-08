@@ -18,6 +18,13 @@ public class AccountDto {
 	public Account convert(){
 		return new Account(agency, number, digit);
 	}
+
+	public AccountDto(Account account) {
+		this.agency = account.getAgency();
+		this.number = account.getNumber();
+		this.digit = account.getDigit();
+	}
+
 }
 
 

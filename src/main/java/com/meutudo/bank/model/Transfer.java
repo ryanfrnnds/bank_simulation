@@ -33,25 +33,27 @@ public class Transfer extends BaseModel<Long> {
 
 	private LocalDateTime date;
 
+	private Long revertTransferId;
+
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 
-	
 	private Double value;
 
 	@Transient
 	@JsonIgnore
 	TransferResultEnum result;
 
-	public Transfer(Account origin, Account destination, LocalDateTime date, double value) {
+	@Transient
+	@JsonIgnore
+	private boolean revert;
+
+	public Transfer(Account origin, Account destination, LocalDateTime date, double value, boolean isRevert) {
 		this.origin = origin;
 		this.destination = destination;
 		this.date = date;
 		this.value = value;
+		this.revert = isRevert;
 	}
 
-	public void generate() {
-		origin.setBalance(origin.getBalance() - value);
-		destination.setBalance(destination.getBalance() + value);
-	}
 }

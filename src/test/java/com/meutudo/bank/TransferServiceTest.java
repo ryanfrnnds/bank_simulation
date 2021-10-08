@@ -51,7 +51,7 @@ public class TransferServiceTest {
     @Test
     //nao Deve Realizar Transferencia Com Saldo Insuficiente
     public void shouldNotAccomplishTransferWithInsufficientBalance() {
-        Transfer params = build(Double.valueOf(600.50), LocalDateTime.now());
+        Transfer params = build(Double.valueOf(600.50), LocalDateTime.now(), false);
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(true);
@@ -71,7 +71,7 @@ public class TransferServiceTest {
     @Test
     //nao Deve Realizar Transferencia Com Valor Zero Ou Menor
     public void shouldNotAccomplishTransfersWithAValueOfZeroOrLess() {
-        Transfer params = build(Double.valueOf(0), LocalDateTime.now());
+        Transfer params = build(Double.valueOf(0), LocalDateTime.now(), false);
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(true);
@@ -91,7 +91,7 @@ public class TransferServiceTest {
     @Test
     //nao Deve Realizar Transferencia Quando Origem Nao Encontrada
     public void shouldNotAccomplishTransferWhenOriginNotFound() {
-        Transfer params = build(Double.valueOf(500), LocalDateTime.now());
+        Transfer params = build(Double.valueOf(500), LocalDateTime.now(), false);
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(false);
 
@@ -108,7 +108,7 @@ public class TransferServiceTest {
     @Test
     //nao Deve Realizar Transferencia Quando Destino Nao Encontrado
     public void shouldNotAccomplishTransferWhenDestinationNotFound() {
-        Transfer params = build(Double.valueOf(500), LocalDateTime.now());
+        Transfer params = build(Double.valueOf(500), LocalDateTime.now(), false);
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(false);
@@ -127,7 +127,7 @@ public class TransferServiceTest {
     //Deve Realizar Transferencia entre duas contas
     public void shouldAccomplishTransfer() throws JsonProcessingException {
         Double value = Double.valueOf(89.23);
-        Transfer params = build(value, LocalDateTime.now());
+        Transfer params = build(value, LocalDateTime.now(), false);
         Double initialValueOrigin = params.getOrigin().getBalance();
         Double initialValueDestination = params.getDestination().getBalance();
 
@@ -150,6 +150,82 @@ public class TransferServiceTest {
         );
     }
 
+    @Test
+    //Não Deve Reverter uma tranferência realizada quando não encontrada
+    public void shouldNotRevertTransferWhenNotFound() throws JsonProcessingException {
+        Long id = 1L;
+        Transfer params = new Transfer();
+        params.setId(id);
+
+        Transfer transfer = build(Double.valueOf(89.23), LocalDateTime.now(), true);
+        transfer.setId(id);
+
+        Mockito.when(transferRepository.findById(id)).thenReturn(Optional.empty());
+
+        Transfer resultado = transferService.revert(id);
+
+        assertAll(
+                () -> verify(transferRepository, never()).save(transfer),
+                () -> Assertions.assertEquals(resultado.getId(), id),
+                () -> Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.NOT_FOUND.getCode())
+        );
+    }
+
+    @Test
+    //Não Deve Reverter uma tranferência realizada quando ja tiver sido revertida
+    public void shouldNotRevertTransferWhenTransferIsRevert() throws JsonProcessingException {
+        Long id = 1L;
+        Transfer params = new Transfer();
+        params.setId(id);
+
+        Transfer transfer = build(Double.valueOf(89.23), LocalDateTime.now(), true);
+        transfer.setId(id);
+        transfer.setRevertTransferId(1L);
+
+        Mockito.when(transferRepository.findById(id)).thenReturn(Optional.of(transfer));
+
+        Transfer resultado = transferService.revert(id);
+
+        assertAll(
+                () -> verify(transferRepository, never()).save(transfer),
+                () -> Assertions.assertEquals(resultado.getId(), id),
+                () -> Assertions.assertNotNull(resultado.getRevertTransferId())
+        );
+    }
+
+    @Test
+    //Deve Reverter uma tranferência realizada
+    public void shouldRevertTransfer() throws JsonProcessingException {
+        Long idUpdateTransfer = 1L;
+        Double value = Double.valueOf(89.23);
+        Transfer params = new Transfer();
+        params.setId(idUpdateTransfer);
+
+        Transfer transferRevert = build(value, LocalDateTime.now(), true);
+        transferRevert.setId(idUpdateTransfer);
+
+        Transfer newTransferForRevert = buildNewTransferForRevert(transferRevert, value);
+
+        Mockito.when(accountService.checkFound(newTransferForRevert.getOrigin().getAgency(), newTransferForRevert.getOrigin().getNumber(),newTransferForRevert.getOrigin().getDigit())).thenReturn(true);
+        Mockito.when(accountService.checkFound(newTransferForRevert.getDestination().getAgency(), newTransferForRevert.getDestination().getNumber(),newTransferForRevert.getDestination().getDigit())).thenReturn(true);
+        Mockito.when(accountService.getBalance(newTransferForRevert.getOrigin().getAgency(), newTransferForRevert.getOrigin().getNumber(),newTransferForRevert.getOrigin().getDigit())).thenReturn(Optional.of(value));
+        Mockito.when(accountService.get(newTransferForRevert.getOrigin().getAgency(), newTransferForRevert.getOrigin().getNumber(),newTransferForRevert.getOrigin().getDigit())).thenReturn(Optional.of(newTransferForRevert.getOrigin()));
+        Mockito.when(accountService.get(newTransferForRevert.getDestination().getAgency(), newTransferForRevert.getDestination().getNumber(),newTransferForRevert.getDestination().getDigit())).thenReturn(Optional.of(newTransferForRevert.getDestination()));
+
+        Mockito.when(transferRepository.findById(idUpdateTransfer)).thenReturn(Optional.of(transferRevert));
+        Mockito.when(transferRepository.save(newTransferForRevert)).thenReturn(newTransferForRevert);
+        Mockito.when(transferRepository.save(transferRevert)).thenReturn(transferRevert);
+
+        Transfer revertTransferResult = transferService.revert(idUpdateTransfer);
+
+        assertAll(
+                () -> verify(transferRepository, times(2)).save(Mockito.any()),
+                () -> Assertions.assertEquals(revertTransferResult.isRevert(), true),
+                () -> Assertions.assertNotNull(revertTransferResult.getRevertTransferId()),
+                () -> Assertions.assertEquals(revertTransferResult.getResult().getCode(), TransferResultEnum.CREATED.getCode())
+        );
+    }
+
     //TODO - Transferencia em Geral
     //--- CENÁRIOS ---
     // Não Deve Realizar Transferencia Com Saldo Insuficiente         - OK
@@ -169,10 +245,10 @@ public class TransferServiceTest {
     //--- CENÁRIOS ---
     // deve programar uma transferência futura! - FALTANDO
 
-    private Transfer build(Double value, LocalDateTime date) {
+    private Transfer build(Double value, LocalDateTime date, boolean isRevert) {
         Account origin = new Account("4421", "01520446", "9", 589.23);
         Account destination = new Account("5817", "82516", "8", 1008.87);
-        return new Transfer(origin,destination, date,value);
+        return new Transfer(origin,destination, date,value, isRevert);
     }
 
     private TransferDto convertDto(Transfer transfer) {
@@ -181,6 +257,18 @@ public class TransferServiceTest {
         dto.setDestination(new AccountDto(transfer.getDestination().getAgency(),transfer.getDestination().getNumber(),transfer.getDestination().getDigit()));
         dto.setValue(transfer.getValue());
         dto.setDate(transfer.getDate());
+        dto.setRevert(transfer.isRevert());
         return dto;
+    }
+
+    private Transfer buildNewTransferForRevert(Transfer transferRevert,Double value) {
+        Transfer newTranfer = build(value, LocalDateTime.now(), false);
+        Account origin = transferRevert.getOrigin();
+        Account destination = transferRevert.getDestination();
+        origin.setBalance(origin.getBalance() + value);
+        destination.setBalance(destination.getBalance() - value);
+        newTranfer.setOrigin(destination);
+        newTranfer.setDestination(origin);
+        return newTranfer;
     }
 }

@@ -12,7 +12,9 @@ public enum TransferResultEnum {
 	INSUFFICIENT_FUNDS(2, "Saldo insuficiente. Saldo: {0}, valor da transferência: {1}"),
 	VALUE_MUST_BE_GREATER_THAN_ZERO(3, "Valor da transferência deve ser maior que zero"),
 	ORIGIN_NOT_FOUND(4, "Conta de ORIGEM não encontrada. Agência: {0}, Conta: {1}"),
-	DESTINATION_NOT_FOUND(4, "Conta de DESTINO não encontrada. Agência: {0}, Conta: {1}");
+	DESTINATION_NOT_FOUND(5, "Conta de DESTINO não encontrada. Agência: {0}, Conta: {1}"),
+	NOT_FOUND(6, "Transferência não encontrada"),
+	IS_REVERT(7, "Transferência já foi anulada.");
 	
 	private Integer code;
 	private String description;
