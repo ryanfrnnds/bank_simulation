@@ -7,8 +7,9 @@ import com.meutudo.bank.model.Transfer;
 import com.meutudo.bank.repository.TransferRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
 
 @Service
 public class TransferService {
@@ -20,7 +21,7 @@ public class TransferService {
     TransferRepository transferRepository;
 
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Transfer create(TransferDto params) throws RuntimeException {
         Transfer transfer = params.convert();
 

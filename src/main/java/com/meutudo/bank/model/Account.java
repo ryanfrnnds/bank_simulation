@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.jsonschema.JsonSerializableSchema;
 import lombok.*;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.List;
 
 @NoArgsConstructor
@@ -16,23 +15,12 @@ import java.util.List;
 @Entity
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Table(name = "ACCOUNT", schema = "SIMULATION")
-public class Account implements Serializable {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1353102708614516888L;
-
-	@Id
-	@EqualsAndHashCode.Include
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name = "ID", unique=true, updatable = false, nullable = false)
-	private Long id;
+public class Account extends BaseModel<Long> {
 	
 	private String agency;
 	private String number;
 	private String digit;
-	private double balance;
+	private Double balance;
 
 	@OneToMany(mappedBy = "origin", targetEntity = Transfer.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JsonManagedReference

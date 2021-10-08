@@ -23,12 +23,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
 @DataJpaTest
-public class TransferServiceTest {
+public class TransferServiceConcurrencyTest {
 
     @TestConfiguration
     static class TransferServiceTestConfiguration {
@@ -59,12 +58,11 @@ public class TransferServiceTest {
 
         Transfer resultado = transferService.create(convertDto(params));
 
-        assertAll(
-                () -> verify(accountService, never()).get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit()),
-                () -> verify(accountService, never()).get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit()),
-                () -> verify(transferRepository, never()).save(params),
-                () -> Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.INSUFFICIENT_FUNDS.getCode())
-        );
+        verify(accountService, never()).get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit());
+        verify(accountService, never()).get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit());
+        verify(transferRepository, never()).save(params);
+
+        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.INSUFFICIENT_FUNDS.getCode());
 
     }
 
@@ -80,12 +78,11 @@ public class TransferServiceTest {
 
         Transfer resultado = transferService.create(convertDto(params));
 
-        assertAll(
-                () -> verify(accountService, never()).get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit()),
-                () -> verify(accountService, never()).get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit()),
-                () -> verify(transferRepository, never()).save(params),
-                () -> Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.VALUE_MUST_BE_GREATER_THAN_ZERO.getCode())
-        );
+        verify(accountService, never()).get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit());
+        verify(accountService, never()).get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit());
+        verify(transferRepository, never()).save(params);
+
+        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.VALUE_MUST_BE_GREATER_THAN_ZERO.getCode());
     }
 
     @Test
@@ -97,12 +94,11 @@ public class TransferServiceTest {
 
         Transfer resultado = transferService.create(convertDto(params));
 
-        assertAll(
-                () -> verify(accountService, never()).get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit()),
-                () -> verify(accountService, never()).get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit()),
-                () -> verify(transferRepository, never()).save(params),
-                () -> Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.ORIGIN_NOT_FOUND.getCode())
-        );
+        verify(accountService, never()).get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit());
+        verify(accountService, never()).get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit());
+        verify(transferRepository, never()).save(params);
+
+        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.ORIGIN_NOT_FOUND.getCode());
     }
 
     @Test
@@ -115,12 +111,11 @@ public class TransferServiceTest {
 
         Transfer resultado = transferService.create(convertDto(params));
 
-        assertAll(
-                () -> verify(accountService, never()).get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit()),
-                () -> verify(accountService, never()).get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit()),
-                () -> verify(transferRepository, never()).save(params),
-                () -> Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.ORIGIN_NOT_FOUND.getCode())
-        );
+        verify(accountService, never()).get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit());
+        verify(accountService, never()).get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit());
+        verify(transferRepository, never()).save(params);
+
+        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.ORIGIN_NOT_FOUND.getCode());
     }
 
     @Test
@@ -140,17 +135,18 @@ public class TransferServiceTest {
 
         Transfer resultado = transferService.create(convertDto(params));
 
-        assertAll(
-                () -> verify(transferRepository, times(1)).save(params),
-                () ->  Assertions.assertEquals(resultado.getOrigin().getBalance(), initialValueOrigin - value),
-                () -> Assertions.assertEquals(resultado.getDestination().getBalance(), initialValueDestination + value),
-                () -> Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.CREATED.getCode()),
-                () -> Assertions.assertEquals(resultado.getValue(), value),
-                () -> Assertions.assertEquals(resultado.getDate(), params.getDate())
-        );
+        verify(transferRepository, times(1)).save(params);
+        Assertions.assertEquals(resultado.getOrigin().getBalance(), initialValueOrigin - value);
+        Assertions.assertEquals(resultado.getDestination().getBalance(), initialValueDestination + value);
+        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.CREATED.getCode());
+        Assertions.assertEquals(resultado.getValue(), value);
+        Assertions.assertEquals(resultado.getDate(), params.getDate());
     }
 
     //TODO - Transferencia em Geral
+    //-- OBSERVAÇÃO --
+    // Talvez, dependendo do tempo, seja bom  utilizar alguma forma de validaçãod e concorrência de dados. Vou tentar simular um teste com isso!!!
+    // Soluções conhecidas seria algo do tipo LockOtimista ou Pessimista... Optar, talvez pelo Otimista
     //--- CENÁRIOS ---
     // Não Deve Realizar Transferencia Com Saldo Insuficiente         - OK
     // Nao Deve Realizar Transferencia Com Valor Zero Ou Menor        - OK

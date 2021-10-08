@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.jsonschema.JsonSerializableSchema;
 import com.meutudo.bank.enums.TransferResultEnum;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @NoArgsConstructor
@@ -18,19 +20,8 @@ import java.time.LocalDateTime;
 @Entity
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Table(name = "TRANSFER", schema = "SIMULATION")
-public class Transfer implements Serializable {
-	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -7186480650802340609L;
+public class Transfer extends BaseModel<Long> {
 
-	@Id
-	@EqualsAndHashCode.Include
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name = "ID", unique=true, updatable = false, nullable = false)
-	private Long id;
-	
 	@ManyToOne
 	@JoinColumn(name="ORIGIN_ACCOUNT_FK")
 	@JsonBackReference
