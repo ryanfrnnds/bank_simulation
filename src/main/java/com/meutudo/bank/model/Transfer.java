@@ -11,6 +11,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @NoArgsConstructor
@@ -31,7 +32,7 @@ public class Transfer extends BaseModel<Long> {
 	@JoinColumn(name="DESTINATION_ACCOUNT_FK")
 	private Account destination;
 
-	private LocalDateTime date;
+	private LocalDate date;
 
 	private Long revertTransferId;
 
@@ -48,12 +49,27 @@ public class Transfer extends BaseModel<Long> {
 	@JsonIgnore
 	private boolean revert;
 
-	public Transfer(Account origin, Account destination, LocalDateTime date, double value, boolean isRevert) {
+	@Transient
+	private int quantityCashPurcahses = 1;
+
+	@Transient
+	private Double valueLastCashPurchases;
+
+	public Transfer(Account origin, Account destination, LocalDate date, double value, boolean isRevert) {
 		this.origin = origin;
 		this.destination = destination;
 		this.date = date;
 		this.value = value;
 		this.revert = isRevert;
+	}
+
+	public Transfer(Account origin, Account destination, LocalDate date, double value, int quantityCashPurcahses) {
+		this.origin = origin;
+		this.destination = destination;
+		this.date = date;
+		this.value = value;
+		this.revert = false;
+		this.quantityCashPurcahses = quantityCashPurcahses;
 	}
 
 }

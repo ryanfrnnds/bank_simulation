@@ -1,27 +1,28 @@
 package com.meutudo.bank.dto;
 
-import com.meutudo.bank.model.Account;
 import com.meutudo.bank.model.Transfer;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Getter
 @Setter
 @NoArgsConstructor
 public class TransferFutureDto extends TransferDto {
 
-	private LocalDateTime date;
+	private LocalDate date;
+	private int quantityCachePurchase;
 
-	public TransferFutureDto(Double value, Account origin , Account destination, boolean isRevert, LocalDateTime date) {
+	public TransferFutureDto(Double value, AccountDto origin , AccountDto destination, boolean isRevert, LocalDate date, int quantityCachePurchase) {
 		super(value, origin , destination, isRevert);
 		this.date = date;
+		this.quantityCachePurchase = quantityCachePurchase;
 	}
 
 	public Transfer convert(){
-		return new Transfer(getOrigin().convert(), getDestination().convert(), this.date, getValue(), isRevert());
+		return new Transfer(getOrigin().convert(), getDestination().convert(), this.date, getValue(), this.quantityCachePurchase);
 	}
 }
 

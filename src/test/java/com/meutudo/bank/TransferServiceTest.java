@@ -3,6 +3,7 @@ package com.meutudo.bank;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.meutudo.bank.dto.AccountDto;
 import com.meutudo.bank.dto.TransferDto;
+import com.meutudo.bank.dto.TransferFutureDto;
 import com.meutudo.bank.enums.TransferResultEnum;
 import com.meutudo.bank.model.Account;
 import com.meutudo.bank.model.Transfer;
@@ -20,7 +21,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -51,7 +54,7 @@ public class TransferServiceTest {
     @Test
     //nao Deve Realizar Transferencia Com Saldo Insuficiente
     public void shouldNotAccomplishTransferWithInsufficientBalance() {
-        Transfer params = build(Double.valueOf(600.50), LocalDateTime.now(), false);
+        Transfer params = build(Double.valueOf(600.50), LocalDate.now(), false);
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(true);
@@ -71,7 +74,7 @@ public class TransferServiceTest {
     @Test
     //nao Deve Realizar Transferencia Com Valor Zero Ou Menor
     public void shouldNotAccomplishTransfersWithAValueOfZeroOrLess() {
-        Transfer params = build(Double.valueOf(0), LocalDateTime.now(), false);
+        Transfer params = build(Double.valueOf(0), LocalDate.now(), false);
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(true);
@@ -91,7 +94,7 @@ public class TransferServiceTest {
     @Test
     //nao Deve Realizar Transferencia Quando Origem Nao Encontrada
     public void shouldNotAccomplishTransferWhenOriginNotFound() {
-        Transfer params = build(Double.valueOf(500), LocalDateTime.now(), false);
+        Transfer params = build(Double.valueOf(500), LocalDate.now(), false);
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(false);
 
@@ -108,7 +111,7 @@ public class TransferServiceTest {
     @Test
     //nao Deve Realizar Transferencia Quando Destino Nao Encontrado
     public void shouldNotAccomplishTransferWhenDestinationNotFound() {
-        Transfer params = build(Double.valueOf(500), LocalDateTime.now(), false);
+        Transfer params = build(Double.valueOf(500), LocalDate.now(), false);
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(false);
@@ -125,7 +128,7 @@ public class TransferServiceTest {
     //Deve Realizar Transferencia entre duas contas
     public void shouldAccomplishTransfer() {
         Double value = Double.valueOf(89.23);
-        Transfer params = build(value, LocalDateTime.now(), false);
+        Transfer params = build(value, LocalDate.now(), false);
         Double initialValueOrigin = params.getOrigin().getBalance();
         Double initialValueDestination = params.getDestination().getBalance();
 
@@ -155,7 +158,7 @@ public class TransferServiceTest {
         Transfer params = new Transfer();
         params.setId(id);
 
-        Transfer transfer = build(Double.valueOf(89.23), LocalDateTime.now(), true);
+        Transfer transfer = build(Double.valueOf(89.23), LocalDate.now(), true);
         transfer.setId(id);
 
         Mockito.when(transferRepository.findById(id)).thenReturn(Optional.empty());
@@ -176,7 +179,7 @@ public class TransferServiceTest {
         Transfer params = new Transfer();
         params.setId(id);
 
-        Transfer transfer = build(Double.valueOf(89.23), LocalDateTime.now(), true);
+        Transfer transfer = build(Double.valueOf(89.23), LocalDate.now(), true);
         transfer.setId(id);
         transfer.setRevertTransferId(1L);
 
@@ -199,7 +202,7 @@ public class TransferServiceTest {
         Transfer params = new Transfer();
         params.setId(idUpdateTransfer);
 
-        Transfer transferRevert = build(value, LocalDateTime.now(), true);
+        Transfer transferRevert = build(value, LocalDate.now(), true);
         transferRevert.setId(idUpdateTransfer);
 
         Transfer newTransferForRevert = buildNewTransferForRevert(transferRevert, value);
@@ -232,7 +235,7 @@ public class TransferServiceTest {
         Transfer params = new Transfer();
         params.setId(idUpdateTransfer);
 
-        Transfer transferRevert = build(value, LocalDateTime.now(), true);
+        Transfer transferRevert = build(value, LocalDate.now(), true);
         transferRevert.setId(idUpdateTransfer);
 
         Transfer newTransferForRevert = buildNewTransferForRevert(transferRevert, value);
@@ -257,6 +260,164 @@ public class TransferServiceTest {
         );
     }
 
+
+    @Test
+    //Não Deve realizar transferência futura quando quantidade for menor ou igual a zero
+    public void shouldNotAccomplishFutureTransferWhenQuantityCahsPurchasesIsLessThanOrEqualToZero() {
+        int quantityCashPurchases = 0;
+        Double value = Double.valueOf(100);
+        LocalDate date = LocalDate.now();
+        TransferFutureDto params = buildFuture(value, date, quantityCashPurchases);
+
+        Transfer resultado = transferService.future(params);
+        verify(transferRepository, never()).save(Mockito.any(Transfer.class));
+        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.NUMBER_OF_CASH_PURCHASES_MUST_BE_GREATER_THAN_ZERO.getCode());
+    }
+
+    @Test
+    //Não Deve realizar transferência futura com valor menor que um
+    public void shouldNotAccomplishFutureTransferWhenValueLessThanToOne() {
+        int quantityCashPurchases = 2;
+        Double value = Double.valueOf(0);
+        LocalDate date = LocalDate.now();
+        TransferFutureDto params = buildFuture(value, date, quantityCashPurchases);
+
+        Transfer resultado = transferService.future(params);
+        verify(transferRepository, never()).save(Mockito.any(Transfer.class));
+        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.VALUE_MUST_BE_LESS_THAN_ONE.getCode());
+    }
+
+    @Test
+    //Não Deve realizar transferência futura quando origem não encontrada
+    public void shouldNotAccomplishFutureTransferWhenOriginNotFound() {
+        int quantityCashPurchases = 2;
+        Double value = Double.valueOf(10);
+        LocalDate date = LocalDate.now().plusDays(1);
+        TransferFutureDto params = buildFuture(value, date, quantityCashPurchases);
+
+        Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(false);
+
+        Transfer resultado = transferService.future(params);
+        verify(transferRepository, never()).save(Mockito.any(Transfer.class));
+        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.ORIGIN_NOT_FOUND.getCode());
+    }
+
+    @Test
+    //Não Deve realizar transferência futura quando destino não encontrada
+    public void shouldNotAccomplishFutureTransferWhenDestinyNotFound() {
+        int quantityCashPurchases = 2;
+        Double value = Double.valueOf(10);
+        LocalDate date = LocalDate.now().plusDays(1);
+        TransferFutureDto params = buildFuture(value, date, quantityCashPurchases);
+
+        Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
+        Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getOrigin().getDigit())).thenReturn(false);
+
+        Transfer resultado = transferService.future(params);
+        verify(transferRepository, never()).save(Mockito.any(Transfer.class));
+        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.DESTINATION_NOT_FOUND.getCode());
+    }
+
+    @Test
+    //Não Deve realizar transferência futura quando não for do dia seguinte
+    public void shouldAccomplishFutureTransferWhenNotForTheNextDay() {
+        int quantityCashPurchases = 11;
+        Double value = Double.valueOf(101);
+        LocalDate date = LocalDate.now();
+        TransferFutureDto params = buildFuture(value, date, quantityCashPurchases);
+
+        Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
+        Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(true);
+
+        Transfer resultado = transferService.future(params);
+        verify(transferRepository, never()).save(Mockito.any(Transfer.class));
+        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.FUTURE_TRANSFER_DATE_MUST_BE_FROM_THE_NEX_DAY.getCode());
+    }
+
+    @Test
+    //Deve realizar transferência futura quando resultado da divisao não gerar dizma periodica
+    public void shouldAccomplishFutureTransferWhenTheResultOfTheDivisionDoesNotGeneratePeriodicTenth() {
+        int quantityCashPurchases = 2;
+        Double value = Double.valueOf(10);
+        LocalDate date = LocalDate.now().plusDays(1);
+        TransferFutureDto params = buildFuture(value, date, quantityCashPurchases);
+
+        Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
+        Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(true);
+
+        Mockito.when(accountService.get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(Optional.of(new Account(params.getOrigin().getAgency(), params.getOrigin().getNumber(), params.getOrigin().getDigit(), value)));
+        Mockito.when(accountService.get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(Optional.of(new Account(params.getDestination().getAgency(), params.getDestination().getNumber(), params.getDestination().getDigit(), value)));
+
+        Transfer resultado = transferService.future(params);
+        verify(transferRepository, times(quantityCashPurchases)).save(Mockito.any(Transfer.class));
+        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.CREATED.getCode());
+    }
+
+    @Test
+    //Deve realizar transferência futura quando resultado da divisao gerar dizma periodica colocando a diferença na ultima parcela
+    public void shouldAccomplishFutureTransferWhenTheResultOfTheDivisionGeneratesAPeriodicDecimalPlacingTheDifferenceInTheLastCashPurchases() {
+        int quantityCashPurchases = 3;
+        Double value = Double.valueOf(10);
+        double valueLastCashPurchases = 0;
+        LocalDate date = LocalDate.now().plusDays(1);
+        TransferFutureDto params = buildFuture(value, date, quantityCashPurchases);
+        double totalValueCashPurchases = 0;
+        Double truncatedValue = BigDecimal.valueOf(value/quantityCashPurchases)
+                .setScale(2, RoundingMode.DOWN)
+                .doubleValue();
+        for (int i = 0; i < quantityCashPurchases; i++) {
+            boolean isLastCashPurchases = (i+1) == quantityCashPurchases;
+            if(isLastCashPurchases) {
+                valueLastCashPurchases = value - totalValueCashPurchases;
+            }
+            totalValueCashPurchases += truncatedValue;
+        }
+
+        Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
+        Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(true);
+
+        Mockito.when(accountService.get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(Optional.of(new Account(params.getOrigin().getAgency(), params.getOrigin().getNumber(), params.getOrigin().getDigit(),value)));
+        Mockito.when(accountService.get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(Optional.of(new Account(params.getDestination().getAgency(), params.getDestination().getNumber(), params.getDestination().getDigit(),value)));
+
+        Transfer resultado = transferService.future(params);
+        verify(transferRepository, times(quantityCashPurchases)).save(Mockito.any(Transfer.class));
+        Assertions.assertEquals(resultado.getValueLastCashPurchases().doubleValue(), valueLastCashPurchases);
+        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.CREATED.getCode());
+    }
+
+    private Transfer build(Double value, LocalDate date, boolean isRevert) {
+        Account origin = new Account("4421", "01520446", "9", 589.23);
+        Account destination = new Account("5817", "82516", "8", 1008.87);
+        return new Transfer(origin,destination, date,value, isRevert);
+    }
+
+    private TransferFutureDto buildFuture(Double value, LocalDate date, int quantityCashPurchase) {
+
+        AccountDto origin = new AccountDto("4421", "01520446", "9");
+        AccountDto destination = new AccountDto("5817", "82516", "8");
+        return new TransferFutureDto(value,origin,destination, false, date,quantityCashPurchase);
+    }
+
+    private TransferDto convertDto(Transfer transfer) {
+        TransferDto dto = new TransferDto();
+        dto.setOrigin(new AccountDto(transfer.getOrigin().getAgency(),transfer.getOrigin().getNumber(),transfer.getOrigin().getDigit()));
+        dto.setDestination(new AccountDto(transfer.getDestination().getAgency(),transfer.getDestination().getNumber(),transfer.getDestination().getDigit()));
+        dto.setValue(transfer.getValue());
+        dto.setRevert(transfer.isRevert());
+        return dto;
+    }
+
+    private Transfer buildNewTransferForRevert(Transfer transferRevert,Double value) {
+        Transfer newTranfer = build(value, LocalDate.now(), false);
+        Account origin = transferRevert.getOrigin();
+        Account destination = transferRevert.getDestination();
+        origin.setBalance(origin.getBalance() + value);
+        destination.setBalance(destination.getBalance() - value);
+        newTranfer.setOrigin(destination);
+        newTranfer.setDestination(origin);
+        return newTranfer;
+    }
+
     //TODO - Transferencia em Geral
     //--- CENÁRIOS ---
     // Não Deve Realizar Transferencia Com Saldo Insuficiente         - OK
@@ -273,35 +434,10 @@ public class TransferServiceTest {
     // Deve Reverter uma tranferência realizada - OK
     //TODO - Programar uma transferência futura parcelada (Pensar em cenários)
     //--- OBSERVAÇÕES ---
-        //Atentar-se as condições de divisões que podem gerar DIZMA PERIODICA! Nesse caso utilizar o truncate na dizma e acrescer 1 centavo na ultima parcela.
-        // Deve gerar quantidade de transferencia igual a quantidade de parcelas
-        // Irá ser considerada qualquer transferencia de DATA FUTURA como sendo uma transferencia futura.
+    //Atentar-se as condições de divisões que podem gerar DIZMA PERIODICA! Nesse caso utilizar o truncate na dizma e acrescer 1 centavo na ultima parcela.
+    // Deve gerar quantidade de transferencia igual a quantidade de parcelas
+    // Irá ser considerada qualquer transferencia de DATA FUTURA como sendo uma transferencia futura.
     //--- CENÁRIOS ---
     // deve programar uma transferência futura! - FALTANDO
-
-    private Transfer build(Double value, LocalDateTime date, boolean isRevert) {
-        Account origin = new Account("4421", "01520446", "9", 589.23);
-        Account destination = new Account("5817", "82516", "8", 1008.87);
-        return new Transfer(origin,destination, date,value, isRevert);
-    }
-
-    private TransferDto convertDto(Transfer transfer) {
-        TransferDto dto = new TransferDto();
-        dto.setOrigin(new AccountDto(transfer.getOrigin().getAgency(),transfer.getOrigin().getNumber(),transfer.getOrigin().getDigit()));
-        dto.setDestination(new AccountDto(transfer.getDestination().getAgency(),transfer.getDestination().getNumber(),transfer.getDestination().getDigit()));
-        dto.setValue(transfer.getValue());
-        dto.setRevert(transfer.isRevert());
-        return dto;
-    }
-
-    private Transfer buildNewTransferForRevert(Transfer transferRevert,Double value) {
-        Transfer newTranfer = build(value, LocalDateTime.now(), false);
-        Account origin = transferRevert.getOrigin();
-        Account destination = transferRevert.getDestination();
-        origin.setBalance(origin.getBalance() + value);
-        destination.setBalance(destination.getBalance() - value);
-        newTranfer.setOrigin(destination);
-        newTranfer.setDestination(origin);
-        return newTranfer;
-    }
 }
+

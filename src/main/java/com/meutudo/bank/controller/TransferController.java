@@ -1,6 +1,7 @@
 package com.meutudo.bank.controller;
 
 import com.meutudo.bank.dto.TransferDto;
+import com.meutudo.bank.dto.TransferFutureDto;
 import com.meutudo.bank.enums.TransferResultEnum;
 import com.meutudo.bank.model.Transfer;
 import com.meutudo.bank.service.TransferService;
@@ -16,7 +17,7 @@ public class TransferController {
     TransferService transferService;
 
     @PostMapping
-    public ResponseEntity<?> insert(@RequestBody TransferDto params) throws RuntimeException {
+    public ResponseEntity<?> create(@RequestBody TransferDto params) throws RuntimeException {
         Transfer transfer = transferService.create(params);
         HttpStatus status = transfer.getResult().getCode().equals(TransferResultEnum.CREATED.getCode()) ? HttpStatus.CREATED : HttpStatus.UNPROCESSABLE_ENTITY;
 
@@ -31,5 +32,13 @@ public class TransferController {
             status = transferRevert.getResult().getCode().equals(TransferResultEnum.CREATED.getCode()) ? HttpStatus.CREATED : HttpStatus.UNPROCESSABLE_ENTITY;
 
         return new ResponseEntity<>(transferRevert.getResult().getMessage(transferRevert),  status);
+    }
+
+    @PostMapping("future")
+    public ResponseEntity<?> future(@RequestBody TransferFutureDto params) throws RuntimeException {
+        Transfer transferFuture = transferService.future(params);
+        HttpStatus status = transferFuture.getResult().getCode().equals(TransferResultEnum.CREATED.getCode()) ? HttpStatus.CREATED : HttpStatus.UNPROCESSABLE_ENTITY;
+
+        return new ResponseEntity<>(transferFuture.getResult().getMessage(transferFuture),  status);
     }
 }
