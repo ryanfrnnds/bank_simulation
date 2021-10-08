@@ -417,29 +417,5 @@ public class TransferServiceTest {
         newTranfer.setDestination(origin);
         return newTranfer;
     }
-
-    //TODO - Transferencia em Geral
-    //--- CENÁRIOS ---
-    // Não Deve Realizar Transferencia Com Saldo Insuficiente         - OK
-    // Nao Deve Realizar Transferencia Com Valor Zero Ou Menor        - OK
-    // Nao Deve Realizar Transferencia Quando Origem Nao Encontrada   - OK
-    // Nao Deve Realizar Transferencia Quando Origem Nao Encontrada   - OK
-    // Nao Deve Realizar Transferencia Quando Destino Nao Encontrado  - OK
-    // Deve Realizar Transferencia entre duas contas                  - OK
-    //TODO - Reverter transferencias
-    //--- CENÁRIOS ---
-    // Não Deve Reverter uma tranferência realizada quando não encontrada           - OK
-    // Não Deve Reverter uma tranferência realizada quando ja tiver sido revertida  - OK
-    // Não Deve Reverter uma tranferência realizada quando não houver SALDO         - OK
-    // Deve Reverter uma tranferência realizada - OK
-    //TODO - Programar uma transferência futura parcelada (Pensar em cenários)
-    //--- CENÁRIOS ---
-    //Não Deve realizar transferência futura quando quantidade for menor ou igual a zero  -OK
-    //Não Deve realizar transferência futura com valor menor que um                       -OK
-    //Não Deve realizar transferência futura quando origem não encontrada                 -OK
-    //Não Deve realizar transferência futura quando destino não encontrada                -OK
-    //Não Deve realizar transferência futura quando não for do dia seguinte               -OK
-    //Deve realizar transferência futura quando resultado da divisao não gerar dizma periodica -OK
-    //Deve realizar transferência futura quando resultado da divisao gerar dizma periodica colocando a diferença na ultima parcela -OK
 }
 
