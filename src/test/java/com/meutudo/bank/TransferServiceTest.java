@@ -433,11 +433,13 @@ public class TransferServiceTest {
     // Não Deve Reverter uma tranferência realizada quando não houver SALDO         - OK
     // Deve Reverter uma tranferência realizada - OK
     //TODO - Programar uma transferência futura parcelada (Pensar em cenários)
-    //--- OBSERVAÇÕES ---
-    //Atentar-se as condições de divisões que podem gerar DIZMA PERIODICA! Nesse caso utilizar o truncate na dizma e acrescer 1 centavo na ultima parcela.
-    // Deve gerar quantidade de transferencia igual a quantidade de parcelas
-    // Irá ser considerada qualquer transferencia de DATA FUTURA como sendo uma transferencia futura.
     //--- CENÁRIOS ---
-    // deve programar uma transferência futura! - FALTANDO
+    //Não Deve realizar transferência futura quando quantidade for menor ou igual a zero  -OK
+    //Não Deve realizar transferência futura com valor menor que um                       -OK
+    //Não Deve realizar transferência futura quando origem não encontrada                 -OK
+    //Não Deve realizar transferência futura quando destino não encontrada                -OK
+    //Não Deve realizar transferência futura quando não for do dia seguinte               -OK
+    //Deve realizar transferência futura quando resultado da divisao não gerar dizma periodica -OK
+    //Deve realizar transferência futura quando resultado da divisao gerar dizma periodica colocando a diferença na ultima parcela -OK
 }
 
