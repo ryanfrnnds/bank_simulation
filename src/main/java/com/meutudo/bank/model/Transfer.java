@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.jsonschema.JsonSerializableSchema;
 import com.meutudo.bank.enums.TransferResultEnum;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -38,8 +39,11 @@ public class Transfer implements Serializable {
 	@ManyToOne
 	@JoinColumn(name="DESTINATION_ACCOUNT_FK")
 	private Account destination;
-	
+
 	private LocalDateTime date;
+
+	@CreationTimestamp
+	private LocalDateTime createdAt;
 
 	
 	private Double value;

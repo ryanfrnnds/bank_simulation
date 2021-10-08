@@ -28,7 +28,6 @@ public class TransferService {
             return transfer;
         }
         generate(params, transfer);
-
         return transfer;
     }
 

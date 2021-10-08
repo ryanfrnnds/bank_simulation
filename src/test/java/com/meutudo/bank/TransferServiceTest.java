@@ -144,6 +144,8 @@ public class TransferServiceTest {
         Assertions.assertEquals(resultado.getOrigin().getBalance(), initialValueOrigin - value);
         Assertions.assertEquals(resultado.getDestination().getBalance(), initialValueDestination + value);
         Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.CREATED.getCode());
+        Assertions.assertEquals(resultado.getValue(), value);
+        Assertions.assertEquals(resultado.getDate(), params.getDate());
     }
 
     private Transfer build(Double value, LocalDateTime date) {
