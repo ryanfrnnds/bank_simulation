@@ -50,7 +50,7 @@ public class TransferServiceTest {
 
     @Test
     //nao Deve Realizar Transferencia Com Saldo Insuficiente
-    public void ShouldNotAccomplishTransferWithInsufficientBalance() {
+    public void shouldNotAccomplishTransferWithInsufficientBalance() {
         Transfer params = build(Double.valueOf(600.50), LocalDateTime.now());
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
@@ -70,7 +70,7 @@ public class TransferServiceTest {
 
     @Test
     //nao Deve Realizar Transferencia Com Valor Zero Ou Menor
-    public void ShouldNotAccomplishTransfersWithAValueOfZeroOrLess() {
+    public void shouldNotAccomplishTransfersWithAValueOfZeroOrLess() {
         Transfer params = build(Double.valueOf(0), LocalDateTime.now());
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
@@ -90,7 +90,7 @@ public class TransferServiceTest {
 
     @Test
     //nao Deve Realizar Transferencia Quando Origem Nao Encontrada
-    public void ShouldNotAccomplishTransferWhenOriginNotFound() {
+    public void shouldNotAccomplishTransferWhenOriginNotFound() {
         Transfer params = build(Double.valueOf(500), LocalDateTime.now());
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(false);
@@ -107,7 +107,7 @@ public class TransferServiceTest {
 
     @Test
     //nao Deve Realizar Transferencia Quando Destino Nao Encontrado
-    public void ShouldNotAccomplishTransferWhenDestinationNotFound() {
+    public void shouldNotAccomplishTransferWhenDestinationNotFound() {
         Transfer params = build(Double.valueOf(500), LocalDateTime.now());
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
@@ -125,7 +125,7 @@ public class TransferServiceTest {
 
     @Test
     //Deve Realizar Transferencia entre duas contas
-    public void ShouldAccomplishTransfer() throws JsonProcessingException {
+    public void shouldAccomplishTransfer() throws JsonProcessingException {
         Double value = Double.valueOf(89.23);
         Transfer params = build(value, LocalDateTime.now());
         Double initialValueOrigin = params.getOrigin().getBalance();

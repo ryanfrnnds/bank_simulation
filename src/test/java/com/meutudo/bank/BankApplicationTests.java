@@ -29,10 +29,6 @@ class BankApplicationTests {
 	TransferRepository transferRepository;
 
 	@Test
-	void contextLoads() {
-	}
-
-	@Test
 	void testConcurrencyWithOptimistLock() throws InterruptedException {
 		Double value = Double.valueOf(89.23);
 		Transfer params = build(value, LocalDateTime.now());
