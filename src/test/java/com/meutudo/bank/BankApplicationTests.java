@@ -8,7 +8,6 @@ import com.meutudo.bank.repository.TransferRepository;
 import com.meutudo.bank.service.AccountService;
 import com.meutudo.bank.service.TransferService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -29,11 +28,17 @@ class BankApplicationTests {
 	TransferRepository transferRepository;
 
 	@Test
-	void testConcurrencyWithOptimistLock() throws InterruptedException {
+	//deve salvar apenas 1 transferencia quando duas transferencias forem criadas em paralelo para a mesma origem e destino
+	void shouldSaveOnlyOneTransferWhenTwoTransfersAreCreatedInParallelToTheSameOriginAndDestination() throws InterruptedException {
+		generateTwoTransfersInParallel();
+		Thread.sleep(1000L);
+		int countTransfer = transferRepository.findAll().size();
+		assertEquals(1, countTransfer);
+	}
+
+	private void generateTwoTransfersInParallel() {
 		Double value = Double.valueOf(89.23);
 		Transfer params = build(value, LocalDateTime.now());
-
-		TransferService transferServiceSpy = Mockito.spy(new TransferService());
 
 		Thread thread = new Thread(() -> {
 			transferService.create(convertDto(params));
@@ -44,11 +49,6 @@ class BankApplicationTests {
 		});
 		thread.start();
 		thread2.start();
-
-		Thread.sleep(1000L);
-
-		int countTransfer = transferRepository.findAll().size();
-		assertEquals(1, countTransfer);
 	}
 
 	private Transfer build(Double value, LocalDateTime date) {
