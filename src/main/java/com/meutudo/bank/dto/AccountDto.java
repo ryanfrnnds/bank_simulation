@@ -1,45 +1,24 @@
-package com.meutudo.bank.model;
+package com.meutudo.bank.dto;
 
-import com.fasterxml.jackson.databind.jsonschema.JsonSerializableSchema;
-import lombok.*;
+import com.meutudo.bank.model.Account;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import javax.persistence.*;
-import java.io.Serializable;
-
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonSerializableSchema
 @Getter
 @Setter
-@Entity
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@Table(name = "ACCOUNT", schema = "SIMULATION")
-public class Account implements Serializable {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1353102708614516888L;
-
-	@Id
-	@EqualsAndHashCode.Include
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name = "ID", unique=true, updatable = false, nullable = false)
-	private Long id;
-	
+@NoArgsConstructor
+@AllArgsConstructor
+public class AccountDto {
 	private String agency;
 	private String number;
 	private String digit;
-	private double balance;
-	
-	@ManyToOne
-	@JoinColumn(name="BANK_FK")
-	private Bank bank;
 
-	public Account(String agency, String number, String digit, double balance) {
-		this.agency = agency;
-		this.number = number;
-		this.digit = digit;
-		this.balance = balance;
+	public Account convert(){
+		return new Account(agency, number, digit);
 	}
 }
+
+
+

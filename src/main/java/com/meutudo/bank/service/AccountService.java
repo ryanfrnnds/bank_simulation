@@ -13,6 +13,10 @@ public class AccountService {
 	
 	@Autowired
 	AccountRepository accountRepository;
+
+	public Optional<Account> get(String agency, String number, String digit) {
+		return accountRepository.findByAgencyAndNumberAndDigit(agency,number,digit);
+	}
 	
 	public Optional<Double> getBalance(String agency, String number, String digit) {
 		Optional<Account> optAccount = accountRepository.findByAgencyAndNumberAndDigit(agency,number,digit);
