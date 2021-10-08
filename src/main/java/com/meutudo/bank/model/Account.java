@@ -1,11 +1,12 @@
 package com.meutudo.bank.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.jsonschema.JsonSerializableSchema;
-import com.meutudo.bank.enums.TypeAccountEnum;
 import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -32,14 +33,21 @@ public class Account implements Serializable {
 	private String number;
 	private String digit;
 	private double balance;
+
+	@OneToMany(mappedBy = "origin", targetEntity = Transfer.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@JsonManagedReference
+	private List<Transfer> transfers;
 	
 	@ManyToOne
 	@JoinColumn(name="BANK_FK")
 	private Bank bank;
-	
-	@Column(name = "ACCOUNT_TYPE")
-	@Convert(converter = TypeAccountEnum.Converter.class)
-	private TypeAccountEnum typeAccountEnum;
+
+	public Account(String agency, String number, String digit) {
+		this.agency = agency;
+		this.number = number;
+		this.digit = digit;
+		this.balance = balance;
+	}
 
 	public Account(String agency, String number, String digit, double balance) {
 		this.agency = agency;

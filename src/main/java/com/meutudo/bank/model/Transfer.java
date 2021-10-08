@@ -1,6 +1,8 @@
 package com.meutudo.bank.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.jsonschema.JsonSerializableSchema;
 import com.meutudo.bank.enums.TransferResultEnum;
 import lombok.*;
 
@@ -9,7 +11,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @NoArgsConstructor
-@AllArgsConstructor
+@JsonSerializableSchema
 @Getter
 @Setter
 @Entity
@@ -30,6 +32,7 @@ public class Transfer implements Serializable {
 	
 	@ManyToOne
 	@JoinColumn(name="ORIGIN_ACCOUNT_FK")
+	@JsonBackReference
 	private Account origin;
 	
 	@ManyToOne
@@ -50,5 +53,10 @@ public class Transfer implements Serializable {
 		this.destination = destination;
 		this.date = date;
 		this.value = value;
+	}
+
+	public void generate() {
+		origin.setBalance(origin.getBalance() - value);
+		destination.setBalance(destination.getBalance() + value);
 	}
 }
