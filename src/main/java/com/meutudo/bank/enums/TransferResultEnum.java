@@ -18,8 +18,6 @@ public enum TransferResultEnum {
 	NUMBER_OF_CASH_PURCHASES_MUST_BE_GREATER_THAN_ZERO(8, "Numero de parcelas deve ser maior que zero."),
 	VALUE_MUST_BE_LESS_THAN_ONE(9, "Valor da transferência , quando futura, não deve ser menor que 1(um)"),
 	FUTURE_TRANSFER_DATE_MUST_BE_FROM_THE_NEX_DAY(10, "Data da transferência futura deve ser apartir do próximo dia");
-
-
 	
 	private Integer code;
 	private String description;

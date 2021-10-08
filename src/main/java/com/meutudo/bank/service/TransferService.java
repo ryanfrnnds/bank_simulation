@@ -3,6 +3,7 @@ package com.meutudo.bank.service;
 import com.meutudo.bank.dto.TransferDto;
 import com.meutudo.bank.dto.TransferFutureDto;
 import com.meutudo.bank.enums.TransferResultEnum;
+import com.meutudo.bank.exceptions.*;
 import com.meutudo.bank.model.Account;
 import com.meutudo.bank.model.Transfer;
 import com.meutudo.bank.repository.TransferRepository;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -31,9 +33,7 @@ public class TransferService {
         Transfer transfer = params.convert();
         transfer.setRevert(false);
 
-        if(!validate(transfer)) {
-            return transfer;
-        }
+        validate(transfer);
 
         Account origin = accountService.get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit()).get();
         Account destination = accountService.get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit()).get();
@@ -49,25 +49,18 @@ public class TransferService {
     public Transfer revert(Long id) {
         Optional<Transfer> optTransfer = transferRepository.findById(id);
         if(optTransfer.isEmpty()) {
-            Transfer empty = new Transfer();
-            empty.setId(id);
-            empty.setResult(TransferResultEnum.NOT_FOUND);
-            return empty;
+            throw new NotFoundException("Transferência não encontrada");
         }
 
         Transfer transferRevert = optTransfer.get();
 
         if(Optional.ofNullable(transferRevert.getRevertTransferId()).isPresent()) {
-            Transfer isRevertTransfer = new Transfer();
-            isRevertTransfer.setId(id);
-            isRevertTransfer.setRevertTransferId(transferRevert.getRevertTransferId());
-            isRevertTransfer.setResult(TransferResultEnum.IS_REVERT);
-            return isRevertTransfer;
+            throw new RevertException("Transferência já foi anulada.");
         }
 
         Transfer newTransfer = buildNewTransferForRevert(transferRevert);
 
-        if(!validate(newTransfer)) return newTransfer;
+        validate(newTransfer);
 
         newTransfer = transferRepository.save(newTransfer);
 
@@ -83,7 +76,7 @@ public class TransferService {
     public Transfer future(TransferFutureDto params) {
         Transfer transfer = params.convert();
 
-        if(!validateFuture(transfer)) return transfer;
+        validateFuture(transfer);
 
         double totalValueCashPurchases = 0;
 
@@ -120,64 +113,51 @@ public class TransferService {
         return transfer;
     }
 
-    private boolean validate(Transfer transfer) {
+    private void validate(Transfer transfer) {
         boolean isNotGreaterThanZero = !(transfer.getValue().compareTo(Double.valueOf(0)) > 0);
         if(isNotGreaterThanZero){
-            transfer.setResult(TransferResultEnum.VALUE_MUST_BE_GREATER_THAN_ZERO);
-            return false;
+            throw new ValueMustbeGreaterThanZeroException("Valor da transferência , quando futura, não deve ser menor que 1(um)");
         }
         boolean isOriginNotFound = !accountService.checkFound(transfer.getOrigin().getAgency(), transfer.getOrigin().getNumber(),transfer.getOrigin().getDigit());
         if(isOriginNotFound){
-            transfer.setResult(TransferResultEnum.ORIGIN_NOT_FOUND);
-            return false;
+            throw new OriginNotFoundException(MessageFormat.format("Conta de ORIGEM não encontrada. Agência: {0}, Conta: {1}", transfer.getOrigin().getAgency(), transfer.getOrigin().getNumber().concat("-").concat(transfer.getOrigin().getDigit())));
         }
         boolean isDestinationNotFound = !accountService.checkFound(transfer.getDestination().getAgency(), transfer.getDestination().getNumber(),transfer.getDestination().getDigit());
         if(isDestinationNotFound){
-            transfer.setResult(TransferResultEnum.DESTINATION_NOT_FOUND);
-            return false;
+            throw new DestinationNotFoundException(MessageFormat.format("Conta de DESTINO não encontrada. Agência: {0}, Conta: {1}", transfer.getDestination().getAgency(), transfer.getDestination().getNumber().concat("-").concat(transfer.getDestination().getDigit())));
         }
         if(!hasBalanceToTransfer(transfer)){
-            transfer.setResult(TransferResultEnum.INSUFFICIENT_FUNDS);
-            transfer.getOrigin().setBalance(accountService.getBalance(transfer.getOrigin().getAgency(), transfer.getOrigin().getNumber(),transfer.getOrigin().getDigit()).get());
-            return false;
+            double balance = accountService.getBalance(transfer.getOrigin().getAgency(), transfer.getOrigin().getNumber(),transfer.getOrigin().getDigit());
+            throw new InsufficientFoundsException(MessageFormat.format("Saldo insuficiente. Saldo: {0}, valor da transferência: {1}", balance, transfer.getValue()));
         }
-        transfer.setResult(TransferResultEnum.CREATED);
-        return true;
     }
 
-    private boolean validateFuture(Transfer transfer) {
+    private void validateFuture(Transfer transfer) {
         if(transfer.getQuantityCashPurcahses() <= 0) {
-            transfer.setResult(TransferResultEnum.NUMBER_OF_CASH_PURCHASES_MUST_BE_GREATER_THAN_ZERO);
-            return false;
+            throw new NumberOfCashPurchasesMustBeGreaterThanZeroException("Numero de parcelas deve ser maior que zero.");
         }
         boolean isMustBeLessThanOne = Optional.ofNullable(transfer.getValue()).isEmpty() || transfer.getValue().doubleValue() < 1;
         if(isMustBeLessThanOne){
-            transfer.setResult(TransferResultEnum.VALUE_MUST_BE_LESS_THAN_ONE);
-            return false;
+            throw new FutureValueMustBeLessThanOneException("Valor da transferência , quando futura, não deve ser menor que 1(um)");
         }
 
         boolean isDateMustBeFromTheNexDay = !transfer.getDate().isAfter(LocalDate.now());
         if(isDateMustBeFromTheNexDay){
-            transfer.setResult(TransferResultEnum.FUTURE_TRANSFER_DATE_MUST_BE_FROM_THE_NEX_DAY);
-            return false;
+            throw new FutureDateMustBeFromTheNextDayException("Data da transferência futura deve ser apartir do próximo dia");
         }
 
         boolean isOriginNotFound = !accountService.checkFound(transfer.getOrigin().getAgency(), transfer.getOrigin().getNumber(),transfer.getOrigin().getDigit());
         if(isOriginNotFound){
-            transfer.setResult(TransferResultEnum.ORIGIN_NOT_FOUND);
-            return false;
+            throw new OriginNotFoundException(MessageFormat.format("Conta de ORIGEM não encontrada. Agência: {0}, Conta: {1}", transfer.getOrigin().getAgency(), transfer.getOrigin().getNumber().concat("-").concat(transfer.getOrigin().getDigit())));
         }
         boolean isDestinationNotFound = !accountService.checkFound(transfer.getDestination().getAgency(), transfer.getDestination().getNumber(),transfer.getDestination().getDigit());
         if(isDestinationNotFound){
-            transfer.setResult(TransferResultEnum.DESTINATION_NOT_FOUND);
-            return false;
+            throw new DestinationNotFoundException(MessageFormat.format("Conta de DESTINO não encontrada. Agência: {0}, Conta: {1}", transfer.getDestination().getAgency(), transfer.getDestination().getNumber().concat("-").concat(transfer.getDestination().getDigit())));
         }
-        transfer.setResult(TransferResultEnum.CREATED);
-        return true;
     }
 
     private boolean hasBalanceToTransfer(Transfer params) {
-        Double balance = accountService.getBalance(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit()).get();
+        Double balance = accountService.getBalance(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit());
         return balance.compareTo(params.getValue()) == 0 || balance.compareTo(params.getValue()) > 0;
     }
 

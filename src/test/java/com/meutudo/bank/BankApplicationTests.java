@@ -28,7 +28,6 @@ class BankApplicationTests {
 	TransferRepository transferRepository;
 
 	@Test
-	//deve salvar apenas 1 transferencia quando duas transferencias forem criadas em paralelo para a mesma origem e destino
 	void shouldSaveOnlyOneTransferWhenTwoTransfersAreCreatedInParallelToTheSameOriginAndDestination() throws InterruptedException {
 		generateTwoTransfersInParallel();
 		Thread.sleep(1000L);

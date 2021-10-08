@@ -17,28 +17,22 @@ public class TransferController {
     TransferService transferService;
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody TransferDto params) throws RuntimeException {
+    public ResponseEntity create(@RequestBody TransferDto params) throws RuntimeException {
         Transfer transfer = transferService.create(params);
-        HttpStatus status = transfer.getResult().getCode().equals(TransferResultEnum.CREATED.getCode()) ? HttpStatus.CREATED : HttpStatus.UNPROCESSABLE_ENTITY;
-
-        return new ResponseEntity<>(transfer.getResult().getMessage(transfer),  status);
+        return new ResponseEntity(HttpStatus.CREATED);
     }
 
-    @PostMapping("revert/{id}")
-    public ResponseEntity<?> revert(@PathVariable Long id) throws RuntimeException {
+    @PutMapping("revert/{id}")
+    public ResponseEntity revert(@PathVariable Long id) throws RuntimeException {
         Transfer transferRevert = transferService.revert(id);
-        HttpStatus status = HttpStatus.OK;
-        if(!transferRevert.getResult().getCode().equals(TransferResultEnum.IS_REVERT.getCode()))
-            status = transferRevert.getResult().getCode().equals(TransferResultEnum.CREATED.getCode()) ? HttpStatus.CREATED : HttpStatus.UNPROCESSABLE_ENTITY;
-
-        return new ResponseEntity<>(transferRevert.getResult().getMessage(transferRevert),  status);
+        return new ResponseEntity(transferRevert,  HttpStatus.OK);
     }
 
     @PostMapping("future")
-    public ResponseEntity<?> future(@RequestBody TransferFutureDto params) throws RuntimeException {
+    public ResponseEntity future(@RequestBody TransferFutureDto params) throws RuntimeException {
         Transfer transferFuture = transferService.future(params);
         HttpStatus status = transferFuture.getResult().getCode().equals(TransferResultEnum.CREATED.getCode()) ? HttpStatus.CREATED : HttpStatus.UNPROCESSABLE_ENTITY;
 
-        return new ResponseEntity<>(transferFuture.getResult().getMessage(transferFuture),  status);
+        return new ResponseEntity(HttpStatus.CREATED);
     }
 }

@@ -5,6 +5,7 @@ import com.meutudo.bank.dto.AccountDto;
 import com.meutudo.bank.dto.TransferDto;
 import com.meutudo.bank.dto.TransferFutureDto;
 import com.meutudo.bank.enums.TransferResultEnum;
+import com.meutudo.bank.exceptions.*;
 import com.meutudo.bank.model.Account;
 import com.meutudo.bank.model.Transfer;
 import com.meutudo.bank.repository.TransferRepository;
@@ -51,81 +52,71 @@ public class TransferServiceTest {
     @MockBean
     TransferRepository transferRepository;
 
-    @Test
-    //nao Deve Realizar Transferencia Com Saldo Insuficiente
+    @Test(expected = InsufficientFoundsException.class)
     public void shouldNotAccomplishTransferWithInsufficientBalance() {
         Transfer params = build(Double.valueOf(600.50), LocalDate.now(), false);
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(true);
-        Mockito.when(accountService.getBalance(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(Optional.of(Double.valueOf(500)));
+        Mockito.when(accountService.getBalance(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(Double.valueOf(500));
 
-        Transfer resultado = transferService.create(convertDto(params));
+        transferService.create(convertDto(params));
 
         assertAll(
                 () -> verify(accountService, never()).get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit()),
                 () -> verify(accountService, never()).get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit()),
-                () -> verify(transferRepository, never()).save(params),
-                () -> Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.INSUFFICIENT_FUNDS.getCode())
+                () -> verify(transferRepository, never()).save(params)
         );
-
     }
 
-    @Test
-    //nao Deve Realizar Transferencia Com Valor Zero Ou Menor
+    @Test(expected = ValueMustbeGreaterThanZeroException.class)
     public void shouldNotAccomplishTransfersWithAValueOfZeroOrLess() {
         Transfer params = build(Double.valueOf(0), LocalDate.now(), false);
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(true);
 
-        Mockito.when(accountService.getBalance(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(Optional.of(Double.valueOf(500.50)));
+        Mockito.when(accountService.getBalance(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(Double.valueOf(500.50));
 
-        Transfer resultado = transferService.create(convertDto(params));
+        transferService.create(convertDto(params));
 
         assertAll(
                 () -> verify(accountService, never()).get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit()),
                 () -> verify(accountService, never()).get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit()),
-                () -> verify(transferRepository, never()).save(params),
-                () -> Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.VALUE_MUST_BE_GREATER_THAN_ZERO.getCode())
+                () -> verify(transferRepository, never()).save(params)
         );
     }
 
-    @Test
-    //nao Deve Realizar Transferencia Quando Origem Nao Encontrada
+    @Test(expected = OriginNotFoundException.class)
     public void shouldNotAccomplishTransferWhenOriginNotFound() {
         Transfer params = build(Double.valueOf(500), LocalDate.now(), false);
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(false);
 
-        Transfer resultado = transferService.create(convertDto(params));
+        transferService.create(convertDto(params));
 
         assertAll(
                 () -> verify(accountService, never()).get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit()),
                 () -> verify(accountService, never()).get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit()),
-                () -> verify(transferRepository, never()).save(params),
-                () -> Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.ORIGIN_NOT_FOUND.getCode())
+                () -> verify(transferRepository, never()).save(params)
         );
     }
 
-    @Test
-    //nao Deve Realizar Transferencia Quando Destino Nao Encontrado
+    @Test(expected = DestinationNotFoundException.class)
     public void shouldNotAccomplishTransferWhenDestinationNotFound() {
         Transfer params = build(Double.valueOf(500), LocalDate.now(), false);
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(false);
 
-        Transfer resultado = transferService.create(convertDto(params));
+        transferService.create(convertDto(params));
 
         verify(accountService, never()).get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit());
         verify(accountService, never()).get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit());
         verify(transferRepository, never()).save(params);
-        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.DESTINATION_NOT_FOUND.getCode());
     }
 
     @Test
-    //Deve Realizar Transferencia entre duas contas
     public void shouldAccomplishTransfer() {
         Double value = Double.valueOf(89.23);
         Transfer params = build(value, LocalDate.now(), false);
@@ -134,7 +125,7 @@ public class TransferServiceTest {
 
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(true);
-        Mockito.when(accountService.getBalance(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(Optional.of(Double.valueOf(589.23)));
+        Mockito.when(accountService.getBalance(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(Double.valueOf(589.23));
         Mockito.when(accountService.get(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(Optional.of(params.getOrigin()));
         Mockito.when(accountService.get(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(Optional.of(params.getDestination()));
         Mockito.when(transferRepository.save(Mockito.any(Transfer.class))).thenReturn(params);
@@ -145,14 +136,12 @@ public class TransferServiceTest {
                 () -> verify(transferRepository, times(1)).save(params),
                 () ->  Assertions.assertEquals(resultado.getOrigin().getBalance(), initialValueOrigin - value),
                 () -> Assertions.assertEquals(resultado.getDestination().getBalance(), initialValueDestination + value),
-                () -> Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.CREATED.getCode()),
                 () -> Assertions.assertEquals(resultado.getValue(), value),
                 () -> Assertions.assertEquals(resultado.getDate(), params.getDate())
         );
     }
 
-    @Test
-    //Não Deve Reverter uma tranferência realizada quando não encontrada
+    @Test(expected = NotFoundException.class)
     public void shouldNotRevertTransferWhenNotFound() {
         Long id = 1L;
         Transfer params = new Transfer();
@@ -167,13 +156,11 @@ public class TransferServiceTest {
 
         assertAll(
                 () -> verify(transferRepository, never()).save(transfer),
-                () -> Assertions.assertEquals(resultado.getId(), id),
-                () -> Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.NOT_FOUND.getCode())
+                () -> Assertions.assertEquals(resultado.getId(), id)
         );
     }
 
-    @Test
-    //Não Deve Reverter uma tranferência realizada quando ja tiver sido revertida
+    @Test(expected = RevertException.class)
     public void shouldNotRevertTransferWhenTransferIsRevert() throws JsonProcessingException {
         Long id = 1L;
         Transfer params = new Transfer();
@@ -194,8 +181,7 @@ public class TransferServiceTest {
         );
     }
 
-    @Test
-    //Não Deve Reverter uma tranferência realizada quando não houver SALDO
+    @Test(expected = InsufficientFoundsException.class)
     public void shouldNotRevertTransferWhenNotBalance() {
         Long idUpdateTransfer = 1L;
         Double value = Double.valueOf(2000.58);
@@ -210,7 +196,7 @@ public class TransferServiceTest {
         Mockito.when(accountService.checkFound(newTransferForRevert.getOrigin().getAgency(), newTransferForRevert.getOrigin().getNumber(),newTransferForRevert.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(newTransferForRevert.getDestination().getAgency(), newTransferForRevert.getDestination().getNumber(),newTransferForRevert.getDestination().getDigit())).thenReturn(true);
 
-        Mockito.when(accountService.getBalance(newTransferForRevert.getOrigin().getAgency(), newTransferForRevert.getOrigin().getNumber(),newTransferForRevert.getOrigin().getDigit())).thenReturn(Optional.of(Double.valueOf(0)));
+        Mockito.when(accountService.getBalance(newTransferForRevert.getOrigin().getAgency(), newTransferForRevert.getOrigin().getNumber(),newTransferForRevert.getOrigin().getDigit())).thenReturn(Double.valueOf(0));
 
         Mockito.when(accountService.get(newTransferForRevert.getOrigin().getAgency(), newTransferForRevert.getOrigin().getNumber(),newTransferForRevert.getOrigin().getDigit())).thenReturn(Optional.of(newTransferForRevert.getOrigin()));
         Mockito.when(accountService.get(newTransferForRevert.getDestination().getAgency(), newTransferForRevert.getDestination().getNumber(),newTransferForRevert.getDestination().getDigit())).thenReturn(Optional.of(newTransferForRevert.getDestination()));
@@ -221,15 +207,11 @@ public class TransferServiceTest {
 
         Transfer revertTransferResult = transferService.revert(idUpdateTransfer);
 
-        assertAll(
-                () -> verify(transferRepository, never()).save(Mockito.any(Transfer.class)),
-                () -> Assertions.assertEquals(revertTransferResult.getResult().getCode(), TransferResultEnum.INSUFFICIENT_FUNDS.getCode())
-        );
+        verify(transferRepository, never()).save(Mockito.any(Transfer.class));
     }
 
     @Test
-    //Deve Reverter uma tranferência realizada
-    public void shouldRevertTransfer() throws JsonProcessingException {
+    public void shouldRevertTransfer() {
         Long idUpdateTransfer = 1L;
         Double value = Double.valueOf(89.23);
         Transfer params = new Transfer();
@@ -242,7 +224,7 @@ public class TransferServiceTest {
 
         Mockito.when(accountService.checkFound(newTransferForRevert.getOrigin().getAgency(), newTransferForRevert.getOrigin().getNumber(),newTransferForRevert.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(newTransferForRevert.getDestination().getAgency(), newTransferForRevert.getDestination().getNumber(),newTransferForRevert.getDestination().getDigit())).thenReturn(true);
-        Mockito.when(accountService.getBalance(newTransferForRevert.getOrigin().getAgency(), newTransferForRevert.getOrigin().getNumber(),newTransferForRevert.getOrigin().getDigit())).thenReturn(Optional.of(value));
+        Mockito.when(accountService.getBalance(newTransferForRevert.getOrigin().getAgency(), newTransferForRevert.getOrigin().getNumber(),newTransferForRevert.getOrigin().getDigit())).thenReturn(value);
         Mockito.when(accountService.get(newTransferForRevert.getOrigin().getAgency(), newTransferForRevert.getOrigin().getNumber(),newTransferForRevert.getOrigin().getDigit())).thenReturn(Optional.of(newTransferForRevert.getOrigin()));
         Mockito.when(accountService.get(newTransferForRevert.getDestination().getAgency(), newTransferForRevert.getDestination().getNumber(),newTransferForRevert.getDestination().getDigit())).thenReturn(Optional.of(newTransferForRevert.getDestination()));
 
@@ -261,8 +243,7 @@ public class TransferServiceTest {
     }
 
 
-    @Test
-    //Não Deve realizar transferência futura quando quantidade for menor ou igual a zero
+    @Test(expected = NumberOfCashPurchasesMustBeGreaterThanZeroException.class)
     public void shouldNotAccomplishFutureTransferWhenQuantityCahsPurchasesIsLessThanOrEqualToZero() {
         int quantityCashPurchases = 0;
         Double value = Double.valueOf(100);
@@ -271,11 +252,9 @@ public class TransferServiceTest {
 
         Transfer resultado = transferService.future(params);
         verify(transferRepository, never()).save(Mockito.any(Transfer.class));
-        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.NUMBER_OF_CASH_PURCHASES_MUST_BE_GREATER_THAN_ZERO.getCode());
     }
 
-    @Test
-    //Não Deve realizar transferência futura com valor menor que um
+    @Test(expected = FutureValueMustBeLessThanOneException.class)
     public void shouldNotAccomplishFutureTransferWhenValueLessThanToOne() {
         int quantityCashPurchases = 2;
         Double value = Double.valueOf(0);
@@ -284,11 +263,9 @@ public class TransferServiceTest {
 
         Transfer resultado = transferService.future(params);
         verify(transferRepository, never()).save(Mockito.any(Transfer.class));
-        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.VALUE_MUST_BE_LESS_THAN_ONE.getCode());
     }
 
-    @Test
-    //Não Deve realizar transferência futura quando origem não encontrada
+    @Test(expected = OriginNotFoundException.class)
     public void shouldNotAccomplishFutureTransferWhenOriginNotFound() {
         int quantityCashPurchases = 2;
         Double value = Double.valueOf(10);
@@ -299,11 +276,9 @@ public class TransferServiceTest {
 
         Transfer resultado = transferService.future(params);
         verify(transferRepository, never()).save(Mockito.any(Transfer.class));
-        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.ORIGIN_NOT_FOUND.getCode());
     }
 
-    @Test
-    //Não Deve realizar transferência futura quando destino não encontrada
+    @Test(expected = DestinationNotFoundException.class)
     public void shouldNotAccomplishFutureTransferWhenDestinyNotFound() {
         int quantityCashPurchases = 2;
         Double value = Double.valueOf(10);
@@ -315,11 +290,9 @@ public class TransferServiceTest {
 
         Transfer resultado = transferService.future(params);
         verify(transferRepository, never()).save(Mockito.any(Transfer.class));
-        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.DESTINATION_NOT_FOUND.getCode());
     }
 
-    @Test
-    //Não Deve realizar transferência futura quando não for do dia seguinte
+    @Test(expected = FutureDateMustBeFromTheNextDayException.class)
     public void shouldAccomplishFutureTransferWhenNotForTheNextDay() {
         int quantityCashPurchases = 11;
         Double value = Double.valueOf(101);
@@ -329,13 +302,12 @@ public class TransferServiceTest {
         Mockito.when(accountService.checkFound(params.getOrigin().getAgency(), params.getOrigin().getNumber(),params.getOrigin().getDigit())).thenReturn(true);
         Mockito.when(accountService.checkFound(params.getDestination().getAgency(), params.getDestination().getNumber(),params.getDestination().getDigit())).thenReturn(true);
 
-        Transfer resultado = transferService.future(params);
+        transferService.future(params);
+
         verify(transferRepository, never()).save(Mockito.any(Transfer.class));
-        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.FUTURE_TRANSFER_DATE_MUST_BE_FROM_THE_NEX_DAY.getCode());
     }
 
     @Test
-    //Deve realizar transferência futura quando resultado da divisao não gerar dizma periodica
     public void shouldAccomplishFutureTransferWhenTheResultOfTheDivisionDoesNotGeneratePeriodicTenth() {
         int quantityCashPurchases = 2;
         Double value = Double.valueOf(10);
@@ -350,11 +322,9 @@ public class TransferServiceTest {
 
         Transfer resultado = transferService.future(params);
         verify(transferRepository, times(quantityCashPurchases)).save(Mockito.any(Transfer.class));
-        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.CREATED.getCode());
     }
 
     @Test
-    //Deve realizar transferência futura quando resultado da divisao gerar dizma periodica colocando a diferença na ultima parcela
     public void shouldAccomplishFutureTransferWhenTheResultOfTheDivisionGeneratesAPeriodicDecimalPlacingTheDifferenceInTheLastCashPurchases() {
         int quantityCashPurchases = 3;
         Double value = Double.valueOf(10);
@@ -382,7 +352,6 @@ public class TransferServiceTest {
         Transfer resultado = transferService.future(params);
         verify(transferRepository, times(quantityCashPurchases)).save(Mockito.any(Transfer.class));
         Assertions.assertEquals(resultado.getValueLastCashPurchases().doubleValue(), valueLastCashPurchases);
-        Assertions.assertEquals(resultado.getResult().getCode(), TransferResultEnum.CREATED.getCode());
     }
 
     private Transfer build(Double value, LocalDate date, boolean isRevert) {
