@@ -267,8 +267,9 @@ public class TransferServiceTest {
     // Deve Realizar Transferencia entre duas contas                  - OK
     //TODO - Reverter transferencias
     //--- CENÁRIOS ---
-    // Não Deve Reverter uma tranferência realizada quando não encontrada - OK
-    // Não Deve Reverter uma tranferência realizada quando ja tiver sido revertida - OK
+    // Não Deve Reverter uma tranferência realizada quando não encontrada           - OK
+    // Não Deve Reverter uma tranferência realizada quando ja tiver sido revertida  - OK
+    // Não Deve Reverter uma tranferência realizada quando não houver SALDO         - OK
     // Deve Reverter uma tranferência realizada - OK
     //TODO - Programar uma transferência futura parcelada (Pensar em cenários)
     //--- OBSERVAÇÕES ---
