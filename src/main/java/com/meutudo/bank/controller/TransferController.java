@@ -25,7 +25,7 @@ public class TransferController {
     @PutMapping("revert/{id}")
     public ResponseEntity revert(@PathVariable Long id) throws RuntimeException {
         Transfer transferRevert = transferService.revert(id);
-        return new ResponseEntity(transferRevert,  HttpStatus.OK);
+        return new ResponseEntity(HttpStatus.OK);
     }
 
     @PostMapping("future")
