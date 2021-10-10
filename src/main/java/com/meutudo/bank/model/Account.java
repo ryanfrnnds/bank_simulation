@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.jsonschema.JsonSerializableSchema;
 import lombok.*;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.util.List;
 
 @NoArgsConstructor
@@ -20,7 +21,7 @@ public class Account extends BaseModel<Long> {
 	private String agency;
 	private String number;
 	private String digit;
-	private Double balance;
+	private BigDecimal balance;
 
 	@OneToMany(mappedBy = "origin", targetEntity = Transfer.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JsonManagedReference
@@ -37,7 +38,7 @@ public class Account extends BaseModel<Long> {
 		this.balance = balance;
 	}
 
-	public Account(String agency, String number, String digit, double balance) {
+	public Account(String agency, String number, String digit, BigDecimal balance) {
 		this.agency = agency;
 		this.number = number;
 		this.digit = digit;

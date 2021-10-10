@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.meutudo.bank.model.Account;
 import com.meutudo.bank.repository.AccountRepository;
 
+import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.Optional;
 
@@ -20,7 +21,7 @@ public class AccountService {
 		return accountRepository.findByAgencyAndNumberAndDigit(agency,number,digit);
 	}
 	
-	public Double getBalance(String agency, String number, String digit) {
+	public BigDecimal getBalance(String agency, String number, String digit) {
 		Optional<Account> optAccount = accountRepository.findByAgencyAndNumberAndDigit(agency,number,digit);
 		if (optAccount.isEmpty()) {
 			throw new BalanceNotFoundException(MessageFormat.format("Dados bancários não encontrado. Agencia: {0}, Conta: {1}-{2} ", agency, number,digit));

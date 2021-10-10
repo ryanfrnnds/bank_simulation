@@ -1,9 +1,8 @@
 package com.meutudo.bank.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.jsonschema.JsonSerializableSchema;
-import com.meutudo.bank.enums.TransferResultEnum;
+import com.meutudo.bank.enums.TransferTypeEnum;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +10,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -32,44 +32,42 @@ public class Transfer extends BaseModel<Long> {
 	@JoinColumn(name="DESTINATION_ACCOUNT_FK")
 	private Account destination;
 
+	@Column(updatable = false)
 	private LocalDate date;
 
+	@Column(updatable = false)
 	private Long revertTransferId;
 
 	@CreationTimestamp
+	@Column(updatable = false)
 	private LocalDateTime createdAt;
 
-	private Double value;
+	@Column(updatable = false)
+	private BigDecimal value;
 
-	@Transient
-	@JsonIgnore
-	TransferResultEnum result;
+	@Enumerated(EnumType.STRING)
+	@Column(updatable = false)
+	private TransferTypeEnum type = TransferTypeEnum.DEFAULT;
 
-	@Transient
-	@JsonIgnore
-	private boolean revert;
-
-	@Transient
-	private int quantityCashPurcahses = 1;
-
-	@Transient
-	private Double valueLastCashPurchases;
-
-	public Transfer(Account origin, Account destination, LocalDate date, double value, boolean isRevert) {
+	public Transfer(Account origin, Account destination, LocalDate date, BigDecimal value) {
 		this.origin = origin;
 		this.destination = destination;
 		this.date = date;
 		this.value = value;
-		this.revert = isRevert;
 	}
 
-	public Transfer(Account origin, Account destination, LocalDate date, double value, int quantityCashPurcahses) {
-		this.origin = origin;
-		this.destination = destination;
-		this.date = date;
-		this.value = value;
-		this.revert = false;
-		this.quantityCashPurcahses = quantityCashPurcahses;
+	public Transfer revert() {
+		Transfer revert = new Transfer();
+		revert.setValue(this.value);
+		revert.setDate(LocalDate.now());
+		revert.setRevertTransferId(this.id);
+		revert.setOrigin(this.destination);
+		revert.setDestination(this.origin);
+		revert.setType(TransferTypeEnum.REVERT);
+
+		revert.getOrigin().setBalance(this.destination.getBalance().subtract(this.value));
+		revert.getDestination().setBalance(this.origin.getBalance().add(this.value));
+		return revert;
 	}
 
 }

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,7 +37,7 @@ class BankApplicationTests {
 	}
 
 	private void generateTwoTransfersInParallel() {
-		Double value = Double.valueOf(89.23);
+		BigDecimal value = BigDecimal.valueOf(89.23);
 		Transfer params = build(value, LocalDate.now());
 
 		Thread thread = new Thread(() -> {
@@ -50,10 +51,10 @@ class BankApplicationTests {
 		thread2.start();
 	}
 
-	private Transfer build(Double value, LocalDate date) {
-		Account origin = new Account("4421", "01520446", "9", 589.23);
-		Account destination = new Account("5817", "82516", "8", 1008.87);
-		return new Transfer(origin,destination, date,value, false);
+	private Transfer build(BigDecimal value, LocalDate date) {
+		Account origin = new Account("4421", "01520446", "9", BigDecimal.valueOf(589.23));
+		Account destination = new Account("5817", "82516", "8", BigDecimal.valueOf(1008.87));
+		return new Transfer(origin,destination, date,value);
 	}
 
 	private TransferDto convertDto(Transfer transfer) {
